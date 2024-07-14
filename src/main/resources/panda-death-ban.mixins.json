@@ -1,0 +1,12 @@
+{
+	"required": true,
+	"package": "me.sebastian420.PandaDeathBan.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"mixins": [
+		"DeathMixin",
+		"KickOnJoinMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
