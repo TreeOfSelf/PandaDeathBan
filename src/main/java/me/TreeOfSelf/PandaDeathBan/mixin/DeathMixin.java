@@ -1,14 +1,13 @@
-package me.sebastian420.PandaDeathBan.mixin;
+package me.TreeOfSelf.PandaDeathBan.mixin;
 
-import me.sebastian420.PandaDeathBan.StateSaverAndLoader;
+import me.TreeOfSelf.PandaDeathBan.BanMessageUtil;
+import me.TreeOfSelf.PandaDeathBan.StateSaverAndLoader;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.world.GameMode;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import static me.sebastian420.PandaDeathBan.BanMessageUtil.createBanMessage;
 
 @Mixin(value = ServerPlayerEntity.class, priority = 10000)
 public class DeathMixin {
@@ -35,6 +34,6 @@ public class DeathMixin {
         playerData.deathUnbanTime = (currentTimeMillis / 1000L) + (oneWeekMillis / 1000L);
 		StateSaverAndLoader.getServerState(serverPlayerEntity.getServer()).markDirty();
 
-		serverPlayerEntity.networkHandler.disconnect(createBanMessage(playerData.deathUnbanTime));
+		serverPlayerEntity.networkHandler.disconnect(BanMessageUtil.createBanMessage(playerData.deathUnbanTime));
 	}
 }

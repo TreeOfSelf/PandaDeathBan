@@ -1,4 +1,4 @@
-package me.sebastian420.PandaDeathBan;
+package me.TreeOfSelf.PandaDeathBan;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.NbtCompound;

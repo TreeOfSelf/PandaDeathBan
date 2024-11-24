@@ -3,8 +3,8 @@
 	"package": "me.sebastian420.PandaDeathBan.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
-		"DeathMixin",
-		"KickOnJoinMixin"
+      "me.TreeOfSelf.PandaDeathBan.mixin.DeathMixin",
+      "me.TreeOfSelf.PandaDeathBan.mixin.KickOnJoinMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

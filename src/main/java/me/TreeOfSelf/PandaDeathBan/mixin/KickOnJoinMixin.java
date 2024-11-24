@@ -1,7 +1,8 @@
-package me.sebastian420.PandaDeathBan.mixin;
+package me.TreeOfSelf.PandaDeathBan.mixin;
 
 import com.mojang.authlib.GameProfile;
-import me.sebastian420.PandaDeathBan.StateSaverAndLoader;
+import me.TreeOfSelf.PandaDeathBan.BanMessageUtil;
+import me.TreeOfSelf.PandaDeathBan.StateSaverAndLoader;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.text.Text;
@@ -13,8 +14,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.net.SocketAddress;
 
-import static me.sebastian420.PandaDeathBan.BanMessageUtil.createBanMessage;
-
 @Mixin(PlayerManager.class)
 public abstract class KickOnJoinMixin {
     @Shadow public abstract MinecraftServer getServer();
@@ -24,7 +23,7 @@ public abstract class KickOnJoinMixin {
         StateSaverAndLoader.PlayerDeathBanData playerData = StateSaverAndLoader.getPlayerState(profile.getId(), this.getServer());
         long currentTimeMillis = System.currentTimeMillis() / 1000L;
         if (playerData.deathUnbanTime > currentTimeMillis) {
-            cir.setReturnValue(createBanMessage(playerData.deathUnbanTime));
+            cir.setReturnValue(BanMessageUtil.createBanMessage(playerData.deathUnbanTime));
         }
     }
 }
