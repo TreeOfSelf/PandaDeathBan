@@ -8,19 +8,29 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = ServerPlayerEntity.class, priority = 10000)
 public class DeathMixin {
 	@Inject(at = @At("HEAD"), method = "onSpawn")
 	private void onSpawn(CallbackInfo info) {
 		ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity)(Object)this;
-		if(serverPlayerEntity.isSpectator()) serverPlayerEntity.changeGameMode(GameMode.SURVIVAL);
+		serverPlayerEntity.changeGameMode(GameMode.SURVIVAL);
+	}
+
+	@Inject(at = @At("TAIL"), method = "changeGameMode", cancellable = true)
+	private void onChangeGamemode(GameMode gameMode, CallbackInfoReturnable<Boolean> info) {
+		ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity)(Object)this;
+		if (gameMode == GameMode.SPECTATOR) {
+			serverPlayerEntity.changeGameMode(GameMode.SURVIVAL);
+			info.setReturnValue(false);
+		}
 	}
 
 	@Inject(at = @At("HEAD"), method = "onDisconnect")
 	private void onDisconnect(CallbackInfo info) {
 		ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity)(Object)this;
-		if(serverPlayerEntity.isSpectator()) serverPlayerEntity.changeGameMode(GameMode.SURVIVAL);
+		serverPlayerEntity.changeGameMode(GameMode.SURVIVAL);
 	}
 
 	@Inject(at = @At("HEAD"), method = "onDeath")
