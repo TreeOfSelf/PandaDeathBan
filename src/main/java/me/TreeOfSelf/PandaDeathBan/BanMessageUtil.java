@@ -17,23 +17,27 @@ public class BanMessageUtil {
 
         long minutes = remainingTime / 60;
 
-
-        MutableText message = MutableText.of(Text.of("").getContent()).append(Text.of("☠ You are Dead ☠").copy().formatted(Formatting.RED))
+        MutableText message = MutableText.of(Text.of("").getContent())
+                .append(Text.of("☠ You are Dead ☠").copy().formatted(Formatting.RED))
                 .append("\n")
                 .append("\n")
                 .append(Text.of("You can join in: ").copy().formatted(Formatting.WHITE));
 
         if (days > 0) {
-            message.append(formatTimeUnit(days, "day")).formatted(Formatting.YELLOW);
+            message.append(formatTimeUnit(days, "day").formatted(Formatting.YELLOW));
         }
         if (hours > 0) {
             if (days > 0) message.append(Text.of(" "));
-            message.append(formatTimeUnit(hours, "hour")).formatted(Formatting.YELLOW);
+            message.append(formatTimeUnit(hours, "hour").formatted(Formatting.YELLOW));
         }
         if (minutes > 0) {
             if (days > 0 || hours > 0) message.append(Text.of(" "));
-            message.append(formatTimeUnit(minutes, "minute")).formatted(Formatting.YELLOW);
+            message.append(formatTimeUnit(minutes, "minute").formatted(Formatting.YELLOW));
         }
+
+        message.append("\n\n")
+                .append(Text.of("Discord: discord.hardcoreanarchy.gay").copy().formatted(Formatting.GRAY));
+
         return message;
     }
 
