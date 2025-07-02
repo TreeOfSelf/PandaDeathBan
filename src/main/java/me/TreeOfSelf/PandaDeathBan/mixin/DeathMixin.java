@@ -28,6 +28,8 @@ public class DeathMixin {
 			try {
 				Thread.sleep(5000);
 				if (serverPlayerEntity.networkHandler != null) {
+					long newCurrentTimeMillis = System.currentTimeMillis();
+					playerData.deathUnbanTime = (newCurrentTimeMillis / 1000L) + (oneWeekMillis / 1000L);
 					playerData.pendingDisconnect = java.util.Optional.of(false);
 					StateSaverAndLoader.getServerState(serverPlayerEntity.getServer()).markDirty();
 					serverPlayerEntity.networkHandler.disconnect(BanMessageUtil.createBanMessage(playerData.deathUnbanTime));
