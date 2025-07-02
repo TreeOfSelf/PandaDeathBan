@@ -12,27 +12,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = ServerPlayerEntity.class, priority = 10000)
 public class DeathMixin {
-	@Inject(at = @At("HEAD"), method = "onSpawn")
-	private void onSpawn(CallbackInfo info) {
-		ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity)(Object)this;
-		serverPlayerEntity.changeGameMode(GameMode.SURVIVAL);
-	}
-
-	@Inject(at = @At("TAIL"), method = "changeGameMode", cancellable = true)
-	private void onChangeGamemode(GameMode gameMode, CallbackInfoReturnable<Boolean> info) {
-		ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity)(Object)this;
-		if (gameMode == GameMode.SPECTATOR) {
-			serverPlayerEntity.changeGameMode(GameMode.SURVIVAL);
-			info.setReturnValue(false);
-		}
-	}
-
-	@Inject(at = @At("HEAD"), method = "onDisconnect")
-	private void onDisconnect(CallbackInfo info) {
-		ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity)(Object)this;
-		serverPlayerEntity.changeGameMode(GameMode.SURVIVAL);
-	}
-
 	@Inject(at = @At("HEAD"), method = "onDeath")
 	private void onDeath(CallbackInfo info) {
 		ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity)(Object)this;
@@ -42,8 +21,20 @@ public class DeathMixin {
 		long oneWeekMillis = 7 * 24 * 60 * 60 * 1000L;
 
         playerData.deathUnbanTime = (currentTimeMillis / 1000L) + (oneWeekMillis / 1000L);
+		playerData.pendingDisconnect = java.util.Optional.of(true);
 		StateSaverAndLoader.getServerState(serverPlayerEntity.getServer()).markDirty();
 
-		serverPlayerEntity.networkHandler.disconnect(BanMessageUtil.createBanMessage(playerData.deathUnbanTime));
+		serverPlayerEntity.getServer().execute(() -> {
+			try {
+				Thread.sleep(5000);
+				if (serverPlayerEntity.networkHandler != null) {
+					playerData.pendingDisconnect = java.util.Optional.of(false);
+					StateSaverAndLoader.getServerState(serverPlayerEntity.getServer()).markDirty();
+					serverPlayerEntity.networkHandler.disconnect(BanMessageUtil.createBanMessage(playerData.deathUnbanTime));
+				}
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			}
+		});
 	}
 }
