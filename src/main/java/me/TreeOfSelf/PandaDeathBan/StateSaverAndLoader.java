@@ -14,6 +14,7 @@ import net.minecraft.world.PersistentStateType;
 import net.minecraft.world.World;
 
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.UUID;
 
 import static me.TreeOfSelf.PandaDeathBan.PandaDeathBan.MOD_ID;
@@ -106,6 +107,11 @@ public class StateSaverAndLoader extends PersistentState {
             NbtCompound playerNbt = new NbtCompound();
 
             playerNbt.putLong("deathUnbanTime", playerData.deathUnbanTime);
+            if (playerData.pendingDisconnect.isPresent()) {
+                playerNbt.putBoolean("pendingDisconnect", playerData.pendingDisconnect.get());
+            } else {
+                playerNbt.putBoolean("pendingDisconnect", false);
+            }
 
             playersNbt.put(uuid.toString(), playerNbt);
         });
@@ -116,5 +122,6 @@ public class StateSaverAndLoader extends PersistentState {
 
     public static class PlayerDeathBanData {
         public Long deathUnbanTime = 0L;
+        public Optional<Boolean> pendingDisconnect = Optional.of(false);
     }
 }
