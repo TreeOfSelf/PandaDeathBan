@@ -14,7 +14,6 @@ import net.minecraft.world.PersistentStateType;
 import net.minecraft.world.World;
 
 import java.util.HashMap;
-import java.util.Optional;
 import java.util.UUID;
 
 import static me.TreeOfSelf.PandaDeathBan.PandaDeathBan.MOD_ID;
@@ -46,7 +45,9 @@ public class StateSaverAndLoader extends PersistentState {
         playersNbt.getKeys().forEach(key -> {
             PlayerDeathBanData playerData = new PlayerDeathBanData();
 
-            playerData.deathUnbanTime = playersNbt.getCompound(key).get().getLong("deathUnbanTime").get();
+            NbtCompound playerNbt = playersNbt.getCompound(key).get();
+            playerData.deathUnbanTime = playerNbt.contains("deathUnbanTime") ? playerNbt.getLong("deathUnbanTime").get() : 0L;
+            playerData.disconnectAtTick = playerNbt.contains("disconnectAtTick") ? playerNbt.getLong("disconnectAtTick").get() : -1L;
 
             UUID uuid = UUID.fromString(key);
             state.players.put(uuid, playerData);
@@ -64,7 +65,9 @@ public class StateSaverAndLoader extends PersistentState {
         playersNbt.getKeys().forEach(key -> {
             PlayerDeathBanData playerData = new PlayerDeathBanData();
 
-            playerData.deathUnbanTime = playersNbt.getCompound(key).get().getLong("deathUnbanTime").get();
+            NbtCompound playerNbt = playersNbt.getCompound(key).get();
+            playerData.deathUnbanTime = playerNbt.contains("deathUnbanTime") ? playerNbt.getLong("deathUnbanTime").get() : 0L;
+            playerData.disconnectAtTick = playerNbt.contains("disconnectAtTick") ? playerNbt.getLong("disconnectAtTick").get() : -1L;
 
             UUID uuid = UUID.fromString(key);
             state.players.put(uuid, playerData);
@@ -107,11 +110,7 @@ public class StateSaverAndLoader extends PersistentState {
             NbtCompound playerNbt = new NbtCompound();
 
             playerNbt.putLong("deathUnbanTime", playerData.deathUnbanTime);
-            if (playerData.pendingDisconnect.isPresent()) {
-                playerNbt.putBoolean("pendingDisconnect", playerData.pendingDisconnect.get());
-            } else {
-                playerNbt.putBoolean("pendingDisconnect", false);
-            }
+            playerNbt.putLong("disconnectAtTick", playerData.disconnectAtTick);
 
             playersNbt.put(uuid.toString(), playerNbt);
         });
@@ -122,6 +121,6 @@ public class StateSaverAndLoader extends PersistentState {
 
     public static class PlayerDeathBanData {
         public Long deathUnbanTime = 0L;
-        public Optional<Boolean> pendingDisconnect = Optional.of(false);
+        public long disconnectAtTick = -1;
     }
 }

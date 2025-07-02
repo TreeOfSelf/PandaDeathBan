@@ -20,23 +20,8 @@ public class DeathMixin {
 		long currentTimeMillis = System.currentTimeMillis();
 		long oneWeekMillis = 7 * 24 * 60 * 60 * 1000L;
 
-        playerData.deathUnbanTime = (currentTimeMillis / 1000L) + (oneWeekMillis / 1000L);
-		playerData.pendingDisconnect = java.util.Optional.of(true);
+    playerData.deathUnbanTime = (currentTimeMillis / 1000L) + (oneWeekMillis / 1000L);
+		playerData.disconnectAtTick = serverPlayerEntity.getServer().getTicks() + 100;
 		StateSaverAndLoader.getServerState(serverPlayerEntity.getServer()).markDirty();
-
-		serverPlayerEntity.getServer().execute(() -> {
-			try {
-				Thread.sleep(5000);
-				if (serverPlayerEntity.networkHandler != null) {
-					long newCurrentTimeMillis = System.currentTimeMillis();
-					playerData.deathUnbanTime = (newCurrentTimeMillis / 1000L) + (oneWeekMillis / 1000L);
-					playerData.pendingDisconnect = java.util.Optional.of(false);
-					StateSaverAndLoader.getServerState(serverPlayerEntity.getServer()).markDirty();
-					serverPlayerEntity.networkHandler.disconnect(BanMessageUtil.createBanMessage(playerData.deathUnbanTime));
-				}
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-			}
-		});
 	}
 }

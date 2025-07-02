@@ -20,7 +20,7 @@ public class PreventRespawnMixin {
     private void preventRespawnIfPending(ClientStatusC2SPacket packet, CallbackInfo ci) {
         if (packet.getMode() == ClientStatusC2SPacket.Mode.PERFORM_RESPAWN) {
             StateSaverAndLoader.PlayerDeathBanData playerData = StateSaverAndLoader.getPlayerState(player);
-            if (playerData.pendingDisconnect.get()) {
+            if (playerData.disconnectAtTick != -1) {
                 ci.cancel();
             }
         }
