@@ -9,6 +9,16 @@ public class BanMessageUtil {
         long currentTimeMillis = System.currentTimeMillis() / 1000L;
         long remainingTime = unbanTime - currentTimeMillis;
 
+        if (remainingTime <= 0) {
+            return MutableText.of(Text.of("").getContent())
+                    .append(Text.of("☠ You are Dead ☠").copy().formatted(Formatting.RED))
+                    .append("\n")
+                    .append("\n")
+                    .append(Text.of("Your ban has expired. Please try joining again.").copy().formatted(Formatting.GREEN))
+                    .append("\n\n")
+                    .append(Text.of("Discord: discord.hardcoreanarchy.gay").copy().formatted(Formatting.GRAY));
+        }
+
         long days = remainingTime / (24 * 60 * 60);
         remainingTime %= 24 * 60 * 60;
 
@@ -16,6 +26,7 @@ public class BanMessageUtil {
         remainingTime %= 60 * 60;
 
         long minutes = remainingTime / 60;
+        long seconds = remainingTime % 60;
 
         MutableText message = MutableText.of(Text.of("").getContent())
                 .append(Text.of("☠ You are Dead ☠").copy().formatted(Formatting.RED))
@@ -23,16 +34,24 @@ public class BanMessageUtil {
                 .append("\n")
                 .append(Text.of("You can join in: ").copy().formatted(Formatting.WHITE));
 
+        boolean hasTimeShown = false;
         if (days > 0) {
             message.append(formatTimeUnit(days, "day").formatted(Formatting.YELLOW));
+            hasTimeShown = true;
         }
         if (hours > 0) {
-            if (days > 0) message.append(Text.of(" "));
+            if (hasTimeShown) message.append(Text.of(" "));
             message.append(formatTimeUnit(hours, "hour").formatted(Formatting.YELLOW));
+            hasTimeShown = true;
         }
         if (minutes > 0) {
-            if (days > 0 || hours > 0) message.append(Text.of(" "));
+            if (hasTimeShown) message.append(Text.of(" "));
             message.append(formatTimeUnit(minutes, "minute").formatted(Formatting.YELLOW));
+            hasTimeShown = true;
+        }
+        if (seconds > 0 || !hasTimeShown) {
+            if (hasTimeShown) message.append(Text.of(" "));
+            message.append(formatTimeUnit(seconds, "second").formatted(Formatting.YELLOW));
         }
 
         message.append("\n\n")
