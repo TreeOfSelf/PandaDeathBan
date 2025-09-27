@@ -24,6 +24,9 @@ public abstract class KickOnJoinMixin {
         long currentTimeMillis = System.currentTimeMillis() / 1000L;
         if (playerData.deathUnbanTime > currentTimeMillis) {
             cir.setReturnValue(BanMessageUtil.createBanMessage(playerData.deathUnbanTime));
+        } else {
+            playerData.disconnectAtTick = -1;
+            StateSaverAndLoader.getServerState(this.getServer()).markDirty();
         }
     }
 }
