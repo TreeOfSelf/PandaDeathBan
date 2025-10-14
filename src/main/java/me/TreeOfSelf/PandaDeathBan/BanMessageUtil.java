@@ -1,24 +1,36 @@
 package me.TreeOfSelf.PandaDeathBan;
 
+import eu.pb4.placeholders.api.TextParserUtils;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 
 public class BanMessageUtil {
     public static Text createBanMessage(long unbanTime) {
+        ConfigManager.Config config = ConfigManager.getConfig();
+
         long currentTimeMillis = System.currentTimeMillis() / 1000L;
         long remainingTime = unbanTime - currentTimeMillis;
 
-        if (remainingTime <= 0) {
-            return MutableText.of(Text.of("").getContent())
-                    .append(Text.of("☠ You are Dead ☠").copy().formatted(Formatting.RED))
-                    .append("\n")
-                    .append("\n")
-                    .append(Text.of("Your ban has expired. Please try joining again.").copy().formatted(Formatting.GREEN))
-                    .append("\n\n")
-                    .append(Text.of("Discord: discord.hardcoreanarchy.gay").copy().formatted(Formatting.GRAY));
+        String formattedTime = formatTimeRemaining(remainingTime);
+        return parseMessageLines(config.banMessage, formattedTime);
+    }
+
+    private static Text parseMessageLines(java.util.List<String> lines, String timeRemaining) {
+        MutableText message = Text.empty();
+
+        for (int i = 0; i < lines.size(); i++) {
+            String line = lines.get(i).replace("%death_time_remaining%", timeRemaining);
+            message.append(TextParserUtils.formatTextSafe(line));
+
+            if (i < lines.size() - 1) {
+                message.append("\n");
+            }
         }
 
+        return message;
+    }
+
+    private static String formatTimeRemaining(long remainingTime) {
         long days = remainingTime / (24 * 60 * 60);
         remainingTime %= 24 * 60 * 60;
 
@@ -28,43 +40,32 @@ public class BanMessageUtil {
         long minutes = remainingTime / 60;
         long seconds = remainingTime % 60;
 
-        MutableText message = MutableText.of(Text.of("").getContent())
-                .append(Text.of("☠ You are Dead ☠").copy().formatted(Formatting.RED))
-                .append("\n")
-                .append("\n")
-                .append(Text.of("You can join in: ").copy().formatted(Formatting.WHITE));
-
+        StringBuilder timeString = new StringBuilder();
         boolean hasTimeShown = false;
+
         if (days > 0) {
-            message.append(formatTimeUnit(days, "day").formatted(Formatting.YELLOW));
+            timeString.append(days).append(" day");
+            if (days != 1) timeString.append("s");
             hasTimeShown = true;
         }
         if (hours > 0) {
-            if (hasTimeShown) message.append(Text.of(" "));
-            message.append(formatTimeUnit(hours, "hour").formatted(Formatting.YELLOW));
+            if (hasTimeShown) timeString.append(" ");
+            timeString.append(hours).append(" hour");
+            if (hours != 1) timeString.append("s");
             hasTimeShown = true;
         }
         if (minutes > 0) {
-            if (hasTimeShown) message.append(Text.of(" "));
-            message.append(formatTimeUnit(minutes, "minute").formatted(Formatting.YELLOW));
+            if (hasTimeShown) timeString.append(" ");
+            timeString.append(minutes).append(" minute");
+            if (minutes != 1) timeString.append("s");
             hasTimeShown = true;
         }
         if (seconds > 0 || !hasTimeShown) {
-            if (hasTimeShown) message.append(Text.of(" "));
-            message.append(formatTimeUnit(seconds, "second").formatted(Formatting.YELLOW));
+            if (hasTimeShown) timeString.append(" ");
+            timeString.append(seconds).append(" second");
+            if (seconds != 1) timeString.append("s");
         }
 
-        message.append("\n\n")
-                .append(Text.of("Discord: discord.hardcoreanarchy.gay").copy().formatted(Formatting.GRAY));
-
-        return message;
-    }
-
-    private static MutableText formatTimeUnit(long value, String unit) {
-        MutableText text = MutableText.of(Text.of(String.format("%d %s", value, unit)).getContent());
-        if (value != 1) {
-            text.append("s");
-        }
-        return text;
+        return timeString.toString();
     }
 }

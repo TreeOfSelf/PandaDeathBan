@@ -5,9 +5,11 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.PlayerConfigEntry;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import static net.minecraft.server.command.CommandManager.argument;
@@ -26,12 +28,14 @@ public class DeathBanResetCommand {
         ServerCommandSource source = context.getSource();
         MinecraftServer server = source.getServer();
 
-        UUID playerUUID = server.getUserCache().findByName(username).map(profile -> profile.getId()).orElse(null);
+        Optional<PlayerConfigEntry> playerEntry = server.getApiServices().nameToIdCache().findByName(username);
 
-        if (playerUUID == null) {
-            source.sendError(Text.literal("Player not found!"));
+        if (playerEntry.isEmpty()) {
+            source.sendError(Text.literal("Player not found! They may have never joined the server."));
             return 0;
         }
+
+        UUID playerUUID = playerEntry.get().id();
 
         StateSaverAndLoader.PlayerDeathBanData playerData = StateSaverAndLoader.getPlayerState(playerUUID, server);
         playerData.deathUnbanTime = 0L;
