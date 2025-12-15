@@ -17,7 +17,7 @@ public class DeathMixin {
 
 		long currentTimeMillis = System.currentTimeMillis();
 		playerData.deathUnbanTime = (currentTimeMillis / 1000L) + ConfigManager.getConfig().banDurationSeconds;
-		playerData.disconnectAtTick = serverPlayerEntity.getEntityWorld().getServer().getTicks() + 100;
+		playerData.disconnectAtTick = serverPlayerEntity.getEntityWorld().getServer().getTicks() + (ConfigManager.getConfig().disconnectTimerSeconds * 20);
 		StateSaverAndLoader.getServerState(serverPlayerEntity.getEntityWorld().getServer()).markDirty();
 	}
 }

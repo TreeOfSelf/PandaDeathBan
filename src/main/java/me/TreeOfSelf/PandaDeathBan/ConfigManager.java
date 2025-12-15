@@ -21,6 +21,7 @@ public class ConfigManager {
 
     public static class Config {
         public long banDurationSeconds = 604800;
+        public int disconnectTimerSeconds = 5;
         public List<String> banMessage = Arrays.asList(
                 "<red>☠ You are Dead ☠</red>",
                 "",
