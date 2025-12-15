@@ -8,6 +8,8 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerConfigEntry;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
+import net.minecraft.command.permission.Permission;
+import net.minecraft.command.permission.PermissionLevel;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -19,7 +21,7 @@ public class DeathBanResetCommand {
 
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(literal("deathbanreset")
-                .requires(source -> source.hasPermissionLevel(4))
+                .requires(source -> source.getPermissions().hasPermission(new Permission.Level(PermissionLevel.ADMINS)))
                 .then(argument("username", StringArgumentType.string())
                         .executes(context -> reset(context, StringArgumentType.getString(context, "username")))));
     }
