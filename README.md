@@ -8,7 +8,7 @@ Drop-in Fabric server mod that adds death bans to your server.
 - Doesn't ban instantly like most mods. Most mods instant-ban you which is jarring. This mod has a configurable timer where you stare at the death screen unable to respawn before it bans you.
 - Configurable ban time
 - Configurable ban message
-- Supports ACTUAL hardcore worlds, which shows hardcore hearts to your players, without allowing them to go into spectator. 
+- Supports ACTUAL hardcore worlds, shows hardcore hearts to your players, without allowing them to go into spectator. (Must be enabled in your level.dat or server.properties at world generation)
 
 ## Configuring
 
