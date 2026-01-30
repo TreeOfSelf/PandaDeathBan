@@ -10,6 +10,9 @@ Drop-in Fabric server mod that adds death bans to your server.
 - Configurable ban message
 - Supports ACTUAL hardcore worlds, shows hardcore hearts to your players, without allowing them to go into spectator. (Must be enabled in your level.dat or server.properties at world generation)
 
+## Commands
+`/deathbanreset {username}` to unban someone
+
 ## Configuring
 
 `config/PandaDeathBan.json` generated at runtime.
