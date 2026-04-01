@@ -1,102 +1,56 @@
 package me.TreeOfSelf.PandaDeathBan;
 
-import com.mojang.datafixers.util.Pair;
-import com.mojang.serialization.*;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtOps;
-import net.minecraft.registry.RegistryWrapper;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.world.PersistentState;
-import net.minecraft.world.PersistentStateManager;
-import net.minecraft.world.PersistentStateType;
-import net.minecraft.world.World;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.datafix.DataFixTypes;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
 
 import java.util.HashMap;
 import java.util.UUID;
 
-import static me.TreeOfSelf.PandaDeathBan.PandaDeathBan.MOD_ID;
+public class StateSaverAndLoader extends SavedData {
 
-public class StateSaverAndLoader extends PersistentState {
+    public static final Identifier DATA_ID = Identifier.withDefaultNamespace("panda-death-ban");
 
-    public static Codec<StateSaverAndLoader> codec(ServerWorld world) {
-        return Codec.of(new Encoder<>() {
-            @Override
-            public <T> DataResult<T> encode(StateSaverAndLoader stateSaverAndLoader, DynamicOps<T> dynamicOps, T t) {
-                NbtCompound nbtCompound = new NbtCompound();
-                stateSaverAndLoader.writeNbt(nbtCompound);
-                return DataResult.success((T) nbtCompound);
-            }
-        }, new Decoder<>() {
-            @Override
-            public <T> DataResult<Pair<StateSaverAndLoader, T>> decode(DynamicOps<T> ops, T input) {
-                NbtCompound nbtCompound = (NbtCompound) ops.convertTo(NbtOps.INSTANCE, input);
-                StateSaverAndLoader partnerState = createFromNbt(nbtCompound, world.getRegistryManager());
-                return DataResult.success(Pair.of(partnerState, ops.empty()));
-            }
-        });
+    private static final Codec<HashMap<UUID, PlayerDeathBanData>> PLAYERS_CODEC = Codec.unboundedMap(
+            Codec.STRING.xmap(UUID::fromString, UUID::toString),
+            PlayerDeathBanData.CODEC
+    ).xmap(HashMap::new, map -> map);
+
+    public static final Codec<StateSaverAndLoader> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            PLAYERS_CODEC.optionalFieldOf("players", new HashMap<>()).forGetter(s -> s.players)
+    ).apply(instance, StateSaverAndLoader::new));
+
+    public static final SavedDataType<StateSaverAndLoader> TYPE = new SavedDataType<>(
+            DATA_ID,
+            StateSaverAndLoader::new,
+            CODEC,
+            DataFixTypes.SAVED_DATA_COMMAND_STORAGE
+    );
+
+    public HashMap<UUID, PlayerDeathBanData> players;
+
+    public StateSaverAndLoader() {
+        this.players = new HashMap<>();
     }
 
-    public static StateSaverAndLoader createFromNbt(NbtCompound tag, RegistryWrapper.WrapperLookup registryLookup) {
-        StateSaverAndLoader state = new StateSaverAndLoader();
-
-        NbtCompound playersNbt = tag.getCompound("players").get();
-        playersNbt.getKeys().forEach(key -> {
-            PlayerDeathBanData playerData = new PlayerDeathBanData();
-
-            NbtCompound playerNbt = playersNbt.getCompound(key).get();
-            playerData.deathUnbanTime = playerNbt.contains("deathUnbanTime") ? playerNbt.getLong("deathUnbanTime").get() : 0L;
-            playerData.disconnectAtTick = playerNbt.contains("disconnectAtTick") ? playerNbt.getLong("disconnectAtTick").get() : -1L;
-
-            UUID uuid = UUID.fromString(key);
-            state.players.put(uuid, playerData);
-        });
-
-        return state;
+    public StateSaverAndLoader(HashMap<UUID, PlayerDeathBanData> players) {
+        this.players = players;
     }
-
-    public HashMap<UUID, PlayerDeathBanData> players = new HashMap<>();
-
-    public static StateSaverAndLoader readNbt(NbtCompound tag) {
-        StateSaverAndLoader state = new StateSaverAndLoader();
-
-        NbtCompound playersNbt = tag.getCompound("players").get();
-        playersNbt.getKeys().forEach(key -> {
-            PlayerDeathBanData playerData = new PlayerDeathBanData();
-
-            NbtCompound playerNbt = playersNbt.getCompound(key).get();
-            playerData.deathUnbanTime = playerNbt.contains("deathUnbanTime") ? playerNbt.getLong("deathUnbanTime").get() : 0L;
-            playerData.disconnectAtTick = playerNbt.contains("disconnectAtTick") ? playerNbt.getLong("disconnectAtTick").get() : -1L;
-
-            UUID uuid = UUID.fromString(key);
-            state.players.put(uuid, playerData);
-        });
-
-        return state;
-    }
-
-
-
 
     public static StateSaverAndLoader getServerState(MinecraftServer server) {
-        PersistentStateManager persistentStateManager = server.getWorld(World.OVERWORLD).getPersistentStateManager();
-
-        PersistentStateType<StateSaverAndLoader> type = new PersistentStateType<>(
-                MOD_ID,
-                StateSaverAndLoader::new,
-                codec(server.getWorld(World.OVERWORLD)),
-                null
-        );
-
-        StateSaverAndLoader state = persistentStateManager.getOrCreate(type);
-        state.markDirty();
-        return state;
+        ServerLevel overworld = server.overworld();
+        return overworld.getDataStorage().computeIfAbsent(TYPE);
     }
 
     public static PlayerDeathBanData getPlayerState(LivingEntity player) {
-        StateSaverAndLoader serverState = getServerState(player.getEntityWorld().getServer());
-        return serverState.players.computeIfAbsent(player.getUuid(), uuid -> new PlayerDeathBanData());
+        StateSaverAndLoader serverState = getServerState(player.level().getServer());
+        return serverState.players.computeIfAbsent(player.getUUID(), uuid -> new PlayerDeathBanData());
     }
 
     public static PlayerDeathBanData getPlayerState(UUID playerUUID, MinecraftServer server) {
@@ -104,23 +58,21 @@ public class StateSaverAndLoader extends PersistentState {
         return serverState.players.computeIfAbsent(playerUUID, uuid -> new PlayerDeathBanData());
     }
 
-    public NbtCompound writeNbt(NbtCompound nbt) {
-        NbtCompound playersNbt = new NbtCompound();
-        players.forEach((uuid, playerData) -> {
-            NbtCompound playerNbt = new NbtCompound();
-
-            playerNbt.putLong("deathUnbanTime", playerData.deathUnbanTime);
-            playerNbt.putLong("disconnectAtTick", playerData.disconnectAtTick);
-
-            playersNbt.put(uuid.toString(), playerNbt);
-        });
-        nbt.put("players", playersNbt);
-
-        return nbt;
-    }
-
     public static class PlayerDeathBanData {
-        public Long deathUnbanTime = 0L;
-        public long disconnectAtTick = -1;
+        public static final Codec<PlayerDeathBanData> CODEC = RecordCodecBuilder.create(i -> i.group(
+                Codec.LONG.optionalFieldOf("deathUnbanTime", 0L).forGetter(d -> d.deathUnbanTime),
+                Codec.LONG.optionalFieldOf("disconnectAtTick", -1L).forGetter(d -> d.disconnectAtTick)
+        ).apply(i, PlayerDeathBanData::new));
+
+        public long deathUnbanTime = 0L;
+        public long disconnectAtTick = -1L;
+
+        public PlayerDeathBanData() {
+        }
+
+        public PlayerDeathBanData(long deathUnbanTime, long disconnectAtTick) {
+            this.deathUnbanTime = deathUnbanTime;
+            this.disconnectAtTick = disconnectAtTick;
+        }
     }
 }

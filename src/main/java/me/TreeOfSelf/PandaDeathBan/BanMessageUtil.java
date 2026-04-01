@@ -1,26 +1,30 @@
 package me.TreeOfSelf.PandaDeathBan;
 
-import eu.pb4.placeholders.api.TextParserUtils;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
+import eu.pb4.placeholders.api.ParserContext;
+import eu.pb4.placeholders.api.Placeholders;
+import eu.pb4.placeholders.api.ServerPlaceholderContext;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.server.MinecraftServer;
 
 public class BanMessageUtil {
-    public static Text createBanMessage(long unbanTime) {
+    public static Component createBanMessage(MinecraftServer server, long unbanTime) {
         ConfigManager.Config config = ConfigManager.getConfig();
 
         long currentTimeMillis = System.currentTimeMillis() / 1000L;
         long remainingTime = unbanTime - currentTimeMillis;
 
         String formattedTime = formatTimeRemaining(remainingTime);
-        return parseMessageLines(config.banMessage, formattedTime);
+        return parseMessageLines(server, config.banMessage, formattedTime);
     }
 
-    private static Text parseMessageLines(java.util.List<String> lines, String timeRemaining) {
-        MutableText message = Text.empty();
+    private static Component parseMessageLines(MinecraftServer server, java.util.List<String> lines, String timeRemaining) {
+        MutableComponent message = Component.empty();
+        ParserContext ctx = ServerPlaceholderContext.of(server).asParserContext();
 
         for (int i = 0; i < lines.size(); i++) {
             String line = lines.get(i).replace("%death_time_remaining%", timeRemaining);
-            message.append(TextParserUtils.formatTextSafe(line));
+            message.append(Placeholders.SERVER_PLACEHOLDER_PARSER.parseComponent(line, ctx));
 
             if (i < lines.size() - 1) {
                 message.append("\n");

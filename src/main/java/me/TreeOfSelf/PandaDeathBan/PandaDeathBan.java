@@ -4,7 +4,7 @@ import net.fabricmc.api.ModInitializer;
 
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,25 +27,25 @@ public class PandaDeathBan implements ModInitializer {
 		});
 
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
-			long currentTick = server.getTicks();
-			List<ServerPlayerEntity> playersToDisconnect = new ArrayList<>();
+			long currentTick = server.getTickCount();
+			List<ServerPlayer> playersToDisconnect = new ArrayList<>();
 
-			for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+			for (ServerPlayer player : server.getPlayerList().getPlayers()) {
 				StateSaverAndLoader.PlayerDeathBanData playerData = StateSaverAndLoader.getPlayerState(player);
 				if (playerData.disconnectAtTick != -1 && currentTick >= playerData.disconnectAtTick) {
 					playersToDisconnect.add(player);
 				}
 			}
 
-			for (ServerPlayerEntity player : playersToDisconnect) {
+			for (ServerPlayer player : playersToDisconnect) {
 				StateSaverAndLoader.PlayerDeathBanData playerData = StateSaverAndLoader.getPlayerState(player);
 				long currentTimeMillis = System.currentTimeMillis();
 				playerData.deathUnbanTime = (currentTimeMillis / 1000L) + ConfigManager.getConfig().banDurationSeconds;
 				playerData.disconnectAtTick = -1;
-				StateSaverAndLoader.getServerState(server).markDirty();
+				StateSaverAndLoader.getServerState(server).setDirty();
 
-				if (player.networkHandler != null) {
-					player.networkHandler.disconnect(BanMessageUtil.createBanMessage(playerData.deathUnbanTime));
+				if (player.connection != null) {
+					player.connection.disconnect(BanMessageUtil.createBanMessage(server, playerData.deathUnbanTime));
 				}
 			}
 		});
