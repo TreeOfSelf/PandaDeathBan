@@ -1,13 +1,18 @@
 package me.TreeOfSelf.PandaDeathBan;
 
 import eu.pb4.placeholders.api.ParserContext;
-import eu.pb4.placeholders.api.Placeholders;
 import eu.pb4.placeholders.api.ServerPlaceholderContext;
+import eu.pb4.placeholders.api.parsers.NodeParser;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.MinecraftServer;
 
 public class BanMessageUtil {
+    private static final NodeParser BAN_MESSAGE_PARSER = NodeParser.builder()
+            .simplifiedTextFormat()
+            .serverPlaceholders()
+            .build();
+
     public static Component createBanMessage(MinecraftServer server, long unbanTime) {
         ConfigManager.Config config = ConfigManager.getConfig();
 
@@ -24,7 +29,7 @@ public class BanMessageUtil {
 
         for (int i = 0; i < lines.size(); i++) {
             String line = lines.get(i).replace("%death_time_remaining%", timeRemaining);
-            message.append(Placeholders.SERVER_PLACEHOLDER_PARSER.parseComponent(line, ctx));
+            message.append(BAN_MESSAGE_PARSER.parseComponent(line, ctx));
 
             if (i < lines.size() - 1) {
                 message.append("\n");
