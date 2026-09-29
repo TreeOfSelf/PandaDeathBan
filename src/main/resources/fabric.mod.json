@@ -6,7 +6,7 @@
 	"description": "Temporarily ban people on death",
 
 	"authors": [
-		"Sebastian420"
+		"TreeOfSelf"
 	],
 	"contact": {
 		"homepage": "",
@@ -25,7 +25,7 @@
 	],
 	"depends": {
 		"fabricloader": ">=0.18.6",
-		"minecraft": ">=26.2",
+		"minecraft": ">=26.3",
 		"java": ">=25",
 		"fabric-api": "*",
 		"placeholder-api": ">=3.0.0-beta.2"
