@@ -37,6 +37,7 @@ public class DeathBanResetCommand {
 
         StateSaverAndLoader.PlayerDeathBanData playerData = StateSaverAndLoader.getPlayerState(playerUUID, server);
         playerData.deathUnbanTime = 0L;
+        playerData.disconnectAtTick = -1;
         StateSaverAndLoader.getServerState(server).setDirty();
 
         source.sendSuccess(() -> Component.literal("Death ban reset for player: " + username), true);
